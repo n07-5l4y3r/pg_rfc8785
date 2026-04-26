@@ -8,6 +8,10 @@ description = "PostgreSQL extension for RFC 8785 / JCS JSON canonicalization"
 [lib]
 crate-type = ["cdylib", "lib"]
 
+[[bin]]
+name = "pgrx_embed_pg_rfc8785"
+path = "src/bin/pgrx_embed.rs"
+
 [features]
 default = ["pg18"]
 pg13 = ["pgrx/pg13", "pgrx-tests/pg13"]
