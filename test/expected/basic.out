@@ -1,0 +1,31 @@
+CREATE EXTENSION pg_rfc8785;
+
+SELECT rfc8785_canonicalize('{"b":2,"a":1}');
+ rfc8785_canonicalize 
+-----------------------
+ {"a":1,"b":2}
+(1 row)
+
+SELECT rfc8785_canonicalize('{"z":[3,2,1],"a":{"b":true,"a":null}}');
+           rfc8785_canonicalize            
+-------------------------------------------
+ {"a":{"a":null,"b":true},"z":[3,2,1]}
+(1 row)
+
+SELECT rfc8785_is_canonical('{"a":1,"b":2}');
+ rfc8785_is_canonical 
+----------------------
+ t
+(1 row)
+
+SELECT rfc8785_is_canonical('{"b":2,"a":1}');
+ rfc8785_is_canonical 
+----------------------
+ f
+(1 row)
+
+SELECT rfc8785_canonicalize('{"b":2,"a":1}'::jsonb::text);
+ rfc8785_canonicalize 
+-----------------------
+ {"a":1,"b":2}
+(1 row)

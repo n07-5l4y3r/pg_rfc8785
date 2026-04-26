@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.7
+
+FROM timescale/timescaledb-ha:pg18.0-all-oss-builder@sha256:a499180acfa15f317ecb9e2357391373661f3b9988f5760c82516cc762b6b642 AS builder
+
+USER root
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      clang \
+      pkg-config \
+      build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV CARGO_HOME=/usr/local/cargo
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV PATH=/usr/local/cargo/bin:$PATH
+
+RUN curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs \
+ | sh -s -- -y --profile minimal
+
+RUN cargo install --locked cargo-pgrx --version 0.16.1
+RUN cargo pgrx init --pg18 "$(which pg_config)"
+
+WORKDIR /build/pg_rfc8785
+COPY . .
+
+RUN cargo pgrx install --release --pg-config "$(which pg_config)"
+
+FROM timescale/timescaledb-ha:pg18.0-ts2.23.0-all-oss@sha256:3490cfabb3c885ed63de7253e18d228fe6ec7a9efc56477fecf1f0d55932a575
+
+USER root
+
+COPY --from=builder /usr/lib/postgresql/18/lib/pg_rfc8785.so /usr/lib/postgresql/18/lib/
+COPY --from=builder /usr/share/postgresql/18/extension/pg_rfc8785* /usr/share/postgresql/18/extension/
+
+USER postgres
